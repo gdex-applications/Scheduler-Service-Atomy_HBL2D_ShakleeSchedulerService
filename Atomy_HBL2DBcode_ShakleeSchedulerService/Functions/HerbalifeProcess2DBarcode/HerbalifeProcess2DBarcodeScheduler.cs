@@ -111,7 +111,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
             {
                 await CreateLog.UpdateErrLogAsync(ex.ToString());
                 EndProcess = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                await SchedulerHelpers.LogApiRequest("AppManager", "HerbalifeProcess2DBarcode", "Failed", SchedulerHelpers.IP, StartProcess, EndProcess, "", "", ex.GetBaseException().Message, "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest("AppManager", "HerbalifeProcess2DBarcode", "Failed", SchedulerHelpers.IP, StartProcess, EndProcess, "", "", CleaningData.CutdownException(ex), "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
 
             }
         }
@@ -130,7 +130,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
             {
                 await CreateLog.UpdateErrLogAsync(ex.ToString());
                 string EndProcessFTP = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                await SchedulerHelpers.LogApiRequest("HERBALIFE_SFTP", "Process_UploadBarcode", "Failed", SchedulerHelpers.IP, StartProcessFTP, EndProcessFTP, "", "", ex.GetBaseException().Message, "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest("HERBALIFE_SFTP", "Process_UploadBarcode", "Failed", SchedulerHelpers.IP, StartProcessFTP, EndProcessFTP, "", "", CleaningData.CutdownException(ex), "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                 //await LogApiRequest
             }
 
@@ -193,7 +193,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
             {
                 await CreateLog.UpdateErrLogAsync(ex.ToString());
                 EndProcessFTP = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                await SchedulerHelpers.LogApiRequest("HERBALIFE_SFTP", LogName, "Failed", SchedulerHelpers.IP, StartProcessFTP, EndProcessFTP, "", "", ex.GetBaseException().Message, EachFilename, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest("HERBALIFE_SFTP", LogName, "Failed", SchedulerHelpers.IP, StartProcessFTP, EndProcessFTP, "", "", CleaningData.CutdownException(ex), EachFilename, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                 return "Failed";
             }
             return result;

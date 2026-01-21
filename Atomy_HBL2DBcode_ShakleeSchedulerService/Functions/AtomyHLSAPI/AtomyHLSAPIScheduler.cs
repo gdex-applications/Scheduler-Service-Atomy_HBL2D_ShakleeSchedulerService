@@ -71,7 +71,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
             }
             catch (Exception ex)
             {
-                await SchedulerHelpers.LogApiRequest("AtomyQueued", "ATOMYPQueued", "Failed", SchedulerHelpers.IP, "", "", "", "Error-Select Atomy Queued : " + ex.GetBaseException().Message, "Failed to Select", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest("AtomyQueued", "ATOMYPQueued", "Failed", SchedulerHelpers.IP, "", "", "", "Error-Select Atomy Queued : " + CleaningData.CutdownException(ex), "Failed to Select", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
 
                 await CreateLog.UpdateErrLogAsync(ex.ToString());
             }
@@ -244,7 +244,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                     string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Pending' WHERE DocNo = '{_dataHeader.docNo}'";
                     await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
-                    await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-CallHLSURL : " + ex.GetBaseException().Message + " " + _responseString, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                    await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-CallHLSURL : " + CleaningData.CutdownException(ex) + " " + _responseString, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                     return _dataHeader;
                 }
 
@@ -255,7 +255,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Pending' WHERE DocNo = '{key}'";
                 await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
-                await SchedulerHelpers.LogApiRequest(key, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-Select GdexDB Table : " + ex.GetBaseException().Message, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest(key, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-Select GdexDB Table : " + CleaningData.CutdownException(ex), "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                 return _dataHeader;
             }
 

@@ -94,7 +94,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
                                 //var _responseString = httpResponse.Content.ReadAsStringAsync().Result; //To get the response
                                 var result = postTask;
                                 var data = result.Content.ReadAsStringAsync(stoppingToken);
-                                string file =await data/*.Substring(1, data.Result.Length - 2)*/;
+                                string file = await data/*.Substring(1, data.Result.Length - 2)*/;
                                 if (result.IsSuccessStatusCode)
                                 {
                                     ResultASN = "Success";
@@ -117,7 +117,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
                         {
                             ResultASN = "Failed";
                             EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query2.Replace("@DocNo", item.docNo), ex.Message, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                            await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query2.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                             await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
 
                         }
@@ -142,7 +142,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
                             catch (Exception ex)
                             {
                                 EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), ex.Message, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                                 await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
                             }
                         }
@@ -154,7 +154,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
             {
                 ResultASN = "Failed";
                 EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                await SchedulerHelpers.LogApiRequest(key, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query1, ex.Message, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await SchedulerHelpers.LogApiRequest(key, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query1, CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                 await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + key);
             }
         }
