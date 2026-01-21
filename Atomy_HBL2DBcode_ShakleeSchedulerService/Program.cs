@@ -9,7 +9,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     .UseContentRoot(AppContext.BaseDirectory)
     .ConfigureServices(services =>
     {
-        //services.AddHostedService<AtomyHLSAPIWorker>();
+       // services.AddHostedService<AtomyHLSAPIWorker>();
         services.AddHostedService<HerbalifeProcess2DBarcodeWorker>();
         //services.AddHostedService<ProcessSendReciptASNWorker>();
     })

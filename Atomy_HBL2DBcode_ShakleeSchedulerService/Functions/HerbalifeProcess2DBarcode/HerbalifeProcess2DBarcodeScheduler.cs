@@ -43,13 +43,17 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
             {
                 using (SqlConnection _conn = new SqlConnection(SchedulerHelpers.conn))
                 {
-                    //select 2DBarcode
-                    //string select2D = " select SoReference1, SoReference1 +'|'+ SerialNo as [2DBarcode] from WHMiddleware.dbo.WH_OrderSerialNo(nolock) where CustomerId ='HBL' "
-                    //                + " and convert(date, CreateDateTime) = '" + DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd") + "'";
 
-                    string select2D = " SELECT A.SerialNo, A.SoReference1 +'|'+ A.SerialNo as [Barcode] FROM WHMiddleware.dbo.WH_OrderSerialNo A with(nolock)" +
-                                      " LEFT JOIN WHMiddleware.dbo.WebApi_Log B with(nolock) ON (A.SerialNo = B.[Key]) WHERE isnull( B.[Key],'')='' and A.CustomerId = 'HBL' " +
-                                      " and CreateDateTime >CONVERT(date, DATEADD(Month,-1, getdate())) ";
+                    string select2D = """
+                        SELECT A.SerialNo, A.SoReference1 +'|'+ A.SerialNo as [Barcode] FROM WHMiddleware.dbo.WH_OrderSerialNo A with(nolock)
+                        LEFT JOIN WHMiddleware.dbo.WebApi_Log B with(nolock) ON (A.SerialNo = B.[Key]) WHERE isnull( B.[Key],'')='' and A.CustomerId = 'HBL'  
+                        and CreateDateTime >CONVERT(date, DATEADD(Month,-1, getdate())) 
+                        """;
+                    //string select2D = """
+                    //    SELECT top 3000 A.SerialNo, A.SoReference1 +'|'+ A.SerialNo as [Barcode] FROM WHMiddleware.dbo.WH_OrderSerialNo A with(nolock)
+                    //    LEFT JOIN WHMiddleware.dbo.WebApi_Log B with(nolock) ON (A.SerialNo = B.[Key]) WHERE isnull( B.[Key],'')='' and A.CustomerId = 'HBL'  
+                    //    --and CreateDateTime >CONVERT(date, DATEADD(Month,-1, getdate())) 
+                    //    """;
 
                     IEnumerable<HBLBarcode> hBLBarcodes = await _conn.QueryAsync<HBLBarcode>(new CommandDefinition(select2D, cancellationToken: stoppingToken));
 
@@ -100,11 +104,8 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
                             File.Copy(filePath, desPath);
                             bool status = await UploadBarcodeFileSftp(filePath, stoppingToken);
                         }
-
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
