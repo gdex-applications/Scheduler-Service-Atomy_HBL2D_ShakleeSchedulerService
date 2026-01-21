@@ -11,6 +11,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions
         internal static string conn = "";
 
         internal static int WebhookInstances = 2;
+        internal static int Retries = 3;
         internal static string IP = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1].ToString();
 
 

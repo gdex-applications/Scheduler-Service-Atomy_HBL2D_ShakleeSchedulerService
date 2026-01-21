@@ -19,6 +19,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
             _configuration = configuration;
             SchedulerHelpers.conn = _configuration.GetConnectionString("Default")!;
             SchedulerHelpers.WebhookInstances = _configuration.GetValue<int>("WebhookInstances")!;
+            SchedulerHelpers.Retries = _configuration.GetValue<int>("Retries")!;
 
             HLSSendOrderURL = _configuration.GetValue<string>("HLSURL_SO")!;
         }
@@ -44,7 +45,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 {
                     var _items = _ttlHeader.Skip(_processedItems).Take(SchedulerHelpers.WebhookInstances);
                     var tries = 0;
-                    while (tries < 3 && _items.Any())
+                    while (tries < SchedulerHelpers.Retries && _items.Any())
                     {
                         if (tries > 0)
                         {
