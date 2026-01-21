@@ -36,7 +36,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
 
 
                 //Get all header data that need to be push to API
-                IEnumerable<Header> _ttlHeader = await con.QueryAsync<Header>(new CommandDefinition("SELECT * FROM [WHMiddleware].[dbo].[Header](NOLOCK) WHERE customerId = 'ATOMY' and OrderStatus = 'Queued' ", cancellationToken: stoppingToken));
+                IEnumerable<Header> _ttlHeader = await con.QueryAsync<Header>(new CommandDefinition("SELECT * FROM [WHMiddleware].[dbo].[Header] with(NOLOCK) WHERE customerId = 'ATOMY' and OrderStatus = 'Queued' ", cancellationToken: stoppingToken));
                 _ttlHeader = _ttlHeader.GroupBy(x => x.docNo).Select(y => y.First());
                 int _processedItems = 0;
 
