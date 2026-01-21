@@ -43,8 +43,18 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 while (_processedItems < _ttlHeader.Count())
                 {
                     var _items = _ttlHeader.Skip(_processedItems).Take(SchedulerHelpers.WebhookInstances);
-                    var postTasks = _items.Select(async _header => await AtomyHLSAPIAsync_Outbound(_header, stoppingToken));
-                    await Task.WhenAll(postTasks);
+                    var tries = 0;
+                    while (tries < 3 && _items.Any())
+                    {
+                        if (tries > 0)
+                        {
+                            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                        }
+                        var postTasks = _items.Select(async _header => await AtomyHLSAPIAsync_Outbound(_header, stoppingToken));
+                        _items = (await Task.WhenAll(postTasks)).Where(i => i != null);
+                        tries++;
+                    }
+
                     //Parallel.ForEach(_items, async _header => await AtomyHLSAPIAsync_Outbound(_header));
                     //Parallel.ForEach(_items, async _header => await GdexProcessAtomyQueued(_header));
 
@@ -67,7 +77,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
             }
         }
 
-        public static async Task<string> AtomyHLSAPIAsync_Outbound(Header _dataHeader, CancellationToken stoppingToken)
+        public static async Task<Header> AtomyHLSAPIAsync_Outbound(Header _dataHeader, CancellationToken stoppingToken)
         {
             string key = string.Empty;
             string FileName = string.Empty;
@@ -78,7 +88,6 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
             GenericResponse _result = new GenericResponse();
             HttpResponseMessage _response = new HttpResponseMessage();
             string jsonString = string.Empty;
-
             using SqlConnection _conn = new SqlConnection(SchedulerHelpers.conn);
 
 
@@ -167,80 +176,78 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 var _requestBodyData = new { xmldata = new { header = _header } };
                 jsonString = JsonConvert.SerializeObject(_requestBodyData);
 
-                using (var httpClient = new HttpClient())
+                using var httpClient = new HttpClient();
+                try
                 {
-                    try
+                    StartPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    //httpClient.BaseAddress = new Uri(url.ToString());
+                    httpClient.DefaultRequestHeaders.Accept.Clear();
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+                    HttpRequestMessage httpRequest = new(HttpMethod.Post, HLSSendOrderURL);
+
+                    StringBuilder data = new StringBuilder();
+                    data.Append(HttpUtility.UrlEncode("messageid")); data.Append('='); data.Append(HttpUtility.UrlEncode("SO"));
+                    data.Append('&');
+                    data.Append(HttpUtility.UrlEncode("data")); data.Append('='); data.Append(HttpUtility.UrlEncode(jsonString));
+
+                    httpRequest.Content = new StringContent(data.ToString(), Encoding.UTF8, "application/x-www-form-urlencoded");
+                    using HttpResponseMessage httpResponse = await httpClient.SendAsync(httpRequest, stoppingToken).ConfigureAwait(true);
+                    //WriteToLog.Logging(httpResponse.Content.ReadAsStringAsync().Result);
+                    _responseString = await httpResponse.Content.ReadAsStringAsync(stoppingToken);
+                    EndFullTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    GenericResponse _responseOrder = JsonConvert.DeserializeObject<GenericResponse>(_responseString)!;
+
+                    if (httpResponse.IsSuccessStatusCode && httpResponse.ReasonPhrase == "OK")
                     {
-                        StartPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        
-                                                //httpClient.BaseAddress = new Uri(url.ToString());
-                                                httpClient.DefaultRequestHeaders.Accept.Clear();
-                        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-                        HttpRequestMessage httpRequest = new(HttpMethod.Post, HLSSendOrderURL);
-
-                        StringBuilder data = new StringBuilder();
-                        data.Append(HttpUtility.UrlEncode("messageid")); data.Append('='); data.Append(HttpUtility.UrlEncode("SO"));
-                        data.Append('&');
-                        data.Append(HttpUtility.UrlEncode("data")); data.Append('='); data.Append(HttpUtility.UrlEncode(jsonString));
-
-                        httpRequest.Content = new StringContent(data.ToString(), Encoding.UTF8, "application/x-www-form-urlencoded");
-                        using HttpResponseMessage httpResponse = await httpClient.SendAsync(httpRequest, stoppingToken).ConfigureAwait(true);
-                        //WriteToLog.Logging(httpResponse.Content.ReadAsStringAsync().Result);
-                        _responseString = await httpResponse.Content.ReadAsStringAsync(stoppingToken);
-                        EndFullTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        GenericResponse _responseOrder = JsonConvert.DeserializeObject<GenericResponse>(_responseString)!;
-
-                        if (httpResponse.IsSuccessStatusCode && httpResponse.ReasonPhrase == "OK")
+                        //Update [WHMiddleware].[dbo].[Header]
+                        if (_responseOrder.Response.Return.returnFlag == "1")
                         {
-                            //Update [WHMiddleware].[dbo].[Header]
-                            if (_responseOrder.Response.Return.returnFlag == "1")
+                            string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Success' WHERE DocNo = '{_dataHeader.docNo}'";
+                            await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
+
+                            await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Success", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, _responseString, "", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                        }
+                        else if (_responseOrder.Response.Return.returnFlag == "0")
+                        {
+                            if (_responseOrder.Response.Return.returnCode == "ED0345")
                             {
                                 string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Success' WHERE DocNo = '{_dataHeader.docNo}'";
                                 await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
                                 await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Success", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, _responseString, "", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+
+
                             }
-                            else if (_responseOrder.Response.Return.returnFlag == "0")
+                            else
                             {
-                                if (_responseOrder.Response.Return.returnCode == "ED0345")
-                                {
-                                    string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Success' WHERE DocNo = '{_dataHeader.docNo}'";
-                                    await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
+                                string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Failed' WHERE DocNo = '{_dataHeader.docNo}'";
+                                await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
-                                    await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Success", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, _responseString, "", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                                await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, _responseString, "", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
 
-
-                                }
-                                else
-                                {
-                                    string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Failed' WHERE DocNo = '{_dataHeader.docNo}'";
-                                    await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
-
-                                    await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, _responseString, "", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-
-                                }
                             }
-                        }
-                        else
-                        {
-                            string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Pending' WHERE DocNo = '{_dataHeader.docNo}'";
-                            await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
-
-                            await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "No StatusCode : " + httpResponse.Content.ToString(), "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + _dataHeader.docNo);
                         string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Pending' WHERE DocNo = '{_dataHeader.docNo}'";
                         await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
-                        await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-CallHLSURL : " + ex.GetBaseException().Message + " " + _responseString, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                        await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "No StatusCode : " + httpResponse.Content.ToString(), "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
                     }
-
-
+                    return null;
                 }
-                return _responseString;
+                catch (Exception ex)
+                {
+                    await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + _dataHeader.docNo);
+                    string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET OrderStatus = 'Pending' WHERE DocNo = '{_dataHeader.docNo}'";
+                    await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
+
+                    await SchedulerHelpers.LogApiRequest(_dataHeader.docNo, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-CallHLSURL : " + ex.GetBaseException().Message + " " + _responseString, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                    return _dataHeader;
+                }
+
             }
             catch (Exception ex)
             {
@@ -249,7 +256,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
 
                 await SchedulerHelpers.LogApiRequest(key, "AtomyHLSAPI", "Failed", SchedulerHelpers.IP, StartPush, EndFullTime, jsonString, "Error-Select GdexDB Table : " + ex.GetBaseException().Message, "Pending Repush", FileName, SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-                return ex.GetBaseException().Message;
+                return _dataHeader;
             }
 
         }
