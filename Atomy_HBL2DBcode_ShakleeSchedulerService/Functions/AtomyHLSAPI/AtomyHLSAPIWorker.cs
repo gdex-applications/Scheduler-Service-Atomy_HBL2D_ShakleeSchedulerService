@@ -4,6 +4,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
     {
         private readonly ILogger<AtomyHLSAPIWorker> _logger;
         private readonly IConfiguration _configuration;
+
         public AtomyHLSAPIWorker(ILogger<AtomyHLSAPIWorker> logger, IConfiguration configuration)
         {
             _logger = logger;
@@ -18,7 +19,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-
+           
             while (!stoppingToken.IsCancellationRequested)
             {
 

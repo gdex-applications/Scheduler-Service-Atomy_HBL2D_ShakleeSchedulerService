@@ -1,6 +1,7 @@
 ﻿using Atomy_HBL2DBcode_ShakleeSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using System.Configuration;
 using System.Net;
 
 namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions
@@ -13,6 +14,9 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions
         internal static int WebhookInstances = 2;
         internal static int Retries = 3;
         internal static string IP = Dns.GetHostEntry(Dns.GetHostName()).AddressList[1].ToString();
+        internal static string filePath = "";
+        internal static ExeConfigurationFileMap? fileMap;
+        internal static Configuration? extConfiguration;
 
 
         public static async Task LogApiRequest(string key, string path, string status, string IP, string start, string end, string request, string response, string error, string filename, string createby, string createdate, CancellationToken stoppingToken)

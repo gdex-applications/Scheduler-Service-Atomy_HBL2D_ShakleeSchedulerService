@@ -17,11 +17,12 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
         public AtomyHLSAPIScheduler(IConfiguration configuration)
         {
             _configuration = configuration;
-            SchedulerHelpers.conn = _configuration.GetConnectionString("Default")!;
-            SchedulerHelpers.WebhookInstances = _configuration.GetValue<int>("WebhookInstances")!;
+            SchedulerHelpers.conn = SchedulerHelpers.extConfiguration!.ConnectionStrings.ConnectionStrings["GWAPI"].ConnectionString!;
+            SchedulerHelpers.WebhookInstances = int.Parse(SchedulerHelpers.extConfiguration!.AppSettings.Settings["app:webhook_instances"].Value!);
             SchedulerHelpers.Retries = _configuration.GetValue<int>("Retries")!;
 
-            HLSSendOrderURL = _configuration.GetValue<string>("HLSURL_SO")!;
+
+            HLSSendOrderURL = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HLSURL_SO"].Value!;
         }
         public static async Task ProcessQueuedAtomyHLSAPI_Outbound(CancellationToken stoppingToken)
         {

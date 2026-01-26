@@ -14,8 +14,8 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
         public ProcessSendReciptASNScheduler(IConfiguration configuration)
         {
             _configuration = configuration;
-            SchedulerHelpers.conn = _configuration.GetConnectionString("Default")!;
-            Token_ReceiptASN = _configuration.GetValue<string>("Token_ReceiptASN")!;
+            SchedulerHelpers.conn = SchedulerHelpers.extConfiguration!.ConnectionStrings.ConnectionStrings["GWAPI"].ConnectionString!;
+            Token_ReceiptASN = SchedulerHelpers.extConfiguration!.AppSettings.Settings["Token_ReceiptASN"].Value!;
         }
 
 

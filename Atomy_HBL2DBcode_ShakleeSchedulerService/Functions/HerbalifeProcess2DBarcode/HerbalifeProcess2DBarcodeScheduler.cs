@@ -17,18 +17,18 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
         {
             _configuration = configuration;
 
-            SchedulerHelpers.conn = _configuration.GetConnectionString("Default")!;
-            SchedulerHelpers.WebhookInstances = _configuration.GetValue<int>("WebhookInstances")!;
-            SaveTo_LocalPath_Barcode = _configuration.GetValue<string>("HerbalifeProcess_Path_Barcode")!;
-            SaveTo_LocalPath_Barcode_Backup = _configuration.GetValue<string>("HerbalifeProcess_Path_Barcode_Backup")!;
-            RemotePath_Barcode = _configuration.GetValue<string>("SFTPHL_Barcode")!;
+            SchedulerHelpers.conn = SchedulerHelpers.extConfiguration!.ConnectionStrings.ConnectionStrings["GWAPI"].ConnectionString!;
+            SchedulerHelpers.WebhookInstances = int.Parse(SchedulerHelpers.extConfiguration!.AppSettings.Settings["app:webhook_instances"].Value!);
+            SaveTo_LocalPath_Barcode = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HerbalifeProcess_Path_Barcode"].Value!; 
+            SaveTo_LocalPath_Barcode_Backup = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HerbalifeProcess_Path_Barcode_Backup"].Value!;
+            RemotePath_Barcode = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_Barcode"].Value!;
 
-            sessionOptions.HostName = _configuration.GetValue<string>("SFTPHL_Hostname")!;
-            sessionOptions.UserName = _configuration.GetValue<string>("SFTPHL_UserName")!;
-            sessionOptions.Password = _configuration.GetValue<string>("SFTPHL_Password")!;
-            sessionOptions.PortNumber = int.Parse(_configuration.GetValue<string>("SFTPHL_Port")!);
-            sessionOptions.SshHostKeyFingerprint = _configuration.GetValue<string>("SFTPHL_SshHostKeyFingerprint")!;
-            sessionOptions.SshPrivateKeyPath = _configuration.GetValue<string>("SFTPHL_PrivateKeyPath")!;
+            sessionOptions.HostName = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_Hostname"].Value!;
+            sessionOptions.UserName = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_UserName"].Value!;
+            sessionOptions.Password = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_Password"].Value!;
+            sessionOptions.PortNumber = int.Parse(SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_Port"].Value!);
+            sessionOptions.SshHostKeyFingerprint = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_SshHostKeyFingerprint"].Value!;
+            sessionOptions.SshPrivateKeyPath = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_PrivateKeyPath"].Value!;
         }
         public static async Task HerbalifeProcessBarcode(CancellationToken stoppingToken)
         {
