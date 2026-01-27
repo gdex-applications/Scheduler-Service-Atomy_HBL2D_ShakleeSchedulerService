@@ -48,44 +48,10 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN
 
                     foreach (var item in _mainData)
                     {
-                        var tries = 0;
-                        while (tries < SchedulerHelpers.Retries && ResultASN != "Success")
-                        {
-                            if (tries > 0)
-                            {
-                                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
-                            }
-                            (ResultASN, EndDateTime) = await SendToApi(path, ResultASN, StartDateTime, EndDateTime, query2, _conn, item, stoppingToken);
-                            tries++;
-                        }
 
-                       
-
+                        (ResultASN, EndDateTime) = await SendToApi(path, ResultASN, StartDateTime, EndDateTime, query2, _conn, item, stoppingToken);
                         //outside for fp
                         if (ResultASN == "Success")
-                        {
-                            string _UpdateQuery = "UPDATE [WHMiddleware].[dbo].[WH_ReceiptASN] " +
-                            "SET [Status]=1 " +
-                            "WHERE  [DocNo] = convert(varchar,@DocNo)";
-                            try
-                            {
-                                await _conn.ExecuteAsync(_UpdateQuery, new
-                                {
-                                    DocNo = item.docNo
-                                });
-
-                                EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), "", "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-                            }
-
-                            catch (Exception ex)
-                            {
-                                EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-                                await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
-                            }
-                        }
-                       else
                         {
                             string _UpdateQuery = "UPDATE [WHMiddleware].[dbo].[WH_ReceiptASN] " +
                             "SET [Status]=1 " +
