@@ -47,7 +47,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DB
                     string select2D = """
                         SELECT A.SerialNo, A.SoReference1 +'|'+ A.SerialNo as [Barcode] FROM WHMiddleware.dbo.WH_OrderSerialNo A with(nolock)
                         LEFT JOIN WHMiddleware.dbo.WebApi_Log B with(nolock) ON (A.SerialNo = B.[Key]) WHERE isnull( B.[Key],'')='' and A.CustomerId = 'HBL'  
-                        and CreateDateTime >CONVERT(date, DATEADD(Month,-1, getdate())) 
+                        and CreateDateTime >CONVERT(date, DATEADD(Month,-1,  DATEADD(DAY,1,EOMONTH(getdate(),-1)))) 
                         """;
                     //string select2D = """
                     //    SELECT top 3000 A.SerialNo, A.SoReference1 +'|'+ A.SerialNo as [Barcode] FROM WHMiddleware.dbo.WH_OrderSerialNo A with(nolock)
