@@ -23,8 +23,8 @@ try
             SchedulerHelpers.filePath = hostContext.Configuration["xmlConfig"]!;
             SchedulerHelpers.fileMap = new ExeConfigurationFileMap { ExeConfigFilename = SchedulerHelpers.filePath };
             SchedulerHelpers.extConfiguration = System.Configuration.ConfigurationManager.OpenMappedExeConfiguration(SchedulerHelpers.fileMap, ConfigurationUserLevel.None);
-            //services.AddHostedService<AtomyHLSAPIWorker>();
-           // services.AddHostedService<HerbalifeProcess2DBarcodeWorker>();
+            services.AddHostedService<AtomyHLSAPIWorker>();
+            services.AddHostedService<HerbalifeProcess2DBarcodeWorker>();
             services.AddHostedService<ProcessSendReciptASNWorker>();
         })
         .UseWindowsService()

@@ -45,6 +45,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                 while (_processedItems < _ttlHeader.Count())
                 {
                     var _items = _ttlHeader.Skip(_processedItems).Take(SchedulerHelpers.WebhookInstances);
+                    var count = _items.Count();
                     var tries = 0;
                     while (tries < SchedulerHelpers.Retries && _items.Any())
                     {
@@ -61,7 +62,7 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
                     //Parallel.ForEach(_items, async _header => await GdexProcessAtomyQueued(_header));
 
 
-                    _processedItems += _items.Count();
+                    _processedItems += count;
                 }
 
                 EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
