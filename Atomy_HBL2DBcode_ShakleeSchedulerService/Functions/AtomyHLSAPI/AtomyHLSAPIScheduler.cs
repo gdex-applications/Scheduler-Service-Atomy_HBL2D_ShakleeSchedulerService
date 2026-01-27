@@ -1,4 +1,6 @@
-﻿using Atomy_HBL2DBcode_ShakleeSchedulerService.Models;
+﻿using ATY_HBL2D_SHKSchedulerService;
+using ATY_HBL2D_SHKSchedulerService.Functions;
+using ATY_HBL2D_SHKSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
@@ -7,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
+namespace ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI
 {
     internal class AtomyHLSAPIScheduler
     {

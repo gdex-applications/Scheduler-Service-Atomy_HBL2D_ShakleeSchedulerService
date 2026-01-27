@@ -1,10 +1,12 @@
-﻿using Atomy_HBL2DBcode_ShakleeSchedulerService.Models;
+﻿using ATY_HBL2D_SHKSchedulerService;
+using ATY_HBL2D_SHKSchedulerService.Functions;
+using ATY_HBL2D_SHKSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptASN
+namespace ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN
 {
     internal class ProcessSendReciptASNScheduler
     {
@@ -46,84 +48,44 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
 
                     foreach (var item in _mainData)
                     {
-                        try
+                        var tries = 0;
+                        while (tries < SchedulerHelpers.Retries && ResultASN != "Success")
                         {
-
-                            IEnumerable<WH_ASN.Detail> details = await _conn.QueryAsync<WH_ASN.Detail>(new CommandDefinition(query2, new { DocNo = item.docNo }, cancellationToken: stoppingToken));
-                            WH_ASN.MainASN _main = new WH_ASN.MainASN(item);
-
-                            _main.details = details;
-                            //var temp = Convert.ToDateTime(_main.receivedTime);
-                            //_main.receivedTime = temp.ToString("yyyy-MM-dd HH:mm:ss");
-
-                            ///for if the receipt need to be seperated by details
-                            //foreach (var data in _detailData)
-                            //{
-                            //        WH_ASN.ReciptASNOut _recipt = new WH_ASN.ReciptASNOut
-                            //        {
-                            //            PONumber = item.userDefine1,
-                            //            LineNumber = data.lineNo,
-                            //            ItemNumber = data.sku,
-                            //            LotNumber = data.lotAtt04,
-                            //            MfgDate = data.lotAtt01,
-                            //            ExpirationDate = data.lotAtt02,
-                            //            InvoiceNumber = data.userDefine2,
-                            //            Container = data.userDefine3,
-                            //            ArrivalDate = item.receivedTime,
-                            //            ReceivedQty = data.receivedQty,
-                            //            Condition = data.lotAtt08,
-                            //            ReceiptDate = data.lotAtt03
-                            //        };
-
-
-                            using (var httpClient = new HttpClient())
+                            if (tries > 0)
                             {
-                                httpClient.BaseAddress = new Uri(item.url);
-                                httpClient.DefaultRequestHeaders.Add("Token", Token_ReceiptASN);
-
-
-
-                                //HTTP POST
-                                // string lastPart = item.url.Split('/').Last();
-                                var x = JsonConvert.SerializeObject(_main);
-                                var content = new StringContent(x, Encoding.UTF8, "appilcation/json");
-                                //ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-                                var postTask = await httpClient.PostAsync(item.url, content, stoppingToken);
-
-                                //var httpResponse = await httpClient.SendAsync(httpRequest).ConfigureAwait(true);
-                                //var _responseString = httpResponse.Content.ReadAsStringAsync().Result; //To get the response
-                                var result = postTask;
-                                var data = result.Content.ReadAsStringAsync(stoppingToken);
-                                string file = await data/*.Substring(1, data.Result.Length - 2)*/;
-                                if (result.IsSuccessStatusCode)
-                                {
-                                    ResultASN = "Success";
-                                    EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                                    await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, JsonConvert.SerializeObject(_main), file, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-
-                                }
-                                else
-                                {
-                                    ResultASN = "Failed";
-                                    EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                    await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, JsonConvert.SerializeObject(_main), file, "Client status: " + result.StatusCode.ToString(), "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-                                }
-                                //}
+                                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                             }
+                            (ResultASN, EndDateTime) = await SendToApi(path, ResultASN, StartDateTime, EndDateTime, query2, _conn, item, stoppingToken);
+                            tries++;
                         }
 
-                        catch (Exception ex)
-                        {
-                            ResultASN = "Failed";
-                            EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query2.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-                            await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
-
-                        }
+                       
 
                         //outside for fp
                         if (ResultASN == "Success")
+                        {
+                            string _UpdateQuery = "UPDATE [WHMiddleware].[dbo].[WH_ReceiptASN] " +
+                            "SET [Status]=1 " +
+                            "WHERE  [DocNo] = convert(varchar,@DocNo)";
+                            try
+                            {
+                                await _conn.ExecuteAsync(_UpdateQuery, new
+                                {
+                                    DocNo = item.docNo
+                                });
+
+                                EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), "", "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                            }
+
+                            catch (Exception ex)
+                            {
+                                EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, _UpdateQuery.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                                await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
+                            }
+                        }
+                       else
                         {
                             string _UpdateQuery = "UPDATE [WHMiddleware].[dbo].[WH_ReceiptASN] " +
                             "SET [Status]=1 " +
@@ -159,6 +121,85 @@ namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptAS
             }
         }
 
+        private static async Task<(string ResultASN, string EndDateTime)> SendToApi(string path, string ResultASN, string StartDateTime, string EndDateTime, string query2, SqlConnection _conn, WH_ASN.MainASNOut item, CancellationToken stoppingToken)
+        {
+            try
+            {
 
+                IEnumerable<WH_ASN.Detail> details = await _conn.QueryAsync<WH_ASN.Detail>(new CommandDefinition(query2, new { DocNo = item.docNo }, cancellationToken: stoppingToken));
+                WH_ASN.MainASN _main = new WH_ASN.MainASN(item);
+
+                _main.details = details;
+                //var temp = Convert.ToDateTime(_main.receivedTime);
+                //_main.receivedTime = temp.ToString("yyyy-MM-dd HH:mm:ss");
+
+                ///for if the receipt need to be seperated by details
+                //foreach (var data in _detailData)
+                //{
+                //        WH_ASN.ReciptASNOut _recipt = new WH_ASN.ReciptASNOut
+                //        {
+                //            PONumber = item.userDefine1,
+                //            LineNumber = data.lineNo,
+                //            ItemNumber = data.sku,
+                //            LotNumber = data.lotAtt04,
+                //            MfgDate = data.lotAtt01,
+                //            ExpirationDate = data.lotAtt02,
+                //            InvoiceNumber = data.userDefine2,
+                //            Container = data.userDefine3,
+                //            ArrivalDate = item.receivedTime,
+                //            ReceivedQty = data.receivedQty,
+                //            Condition = data.lotAtt08,
+                //            ReceiptDate = data.lotAtt03
+                //        };
+
+
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.BaseAddress = new Uri(item.url);
+                    httpClient.DefaultRequestHeaders.Add("Token", Token_ReceiptASN);
+
+
+
+                    //HTTP POST
+                    // string lastPart = item.url.Split('/').Last();
+                    var x = JsonConvert.SerializeObject(_main);
+                    var content = new StringContent(x, Encoding.UTF8, "appilcation/json");
+                    //ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                    var postTask = await httpClient.PostAsync(item.url, content, stoppingToken);
+
+                    //var httpResponse = await httpClient.SendAsync(httpRequest).ConfigureAwait(true);
+                    //var _responseString = httpResponse.Content.ReadAsStringAsync().Result; //To get the response
+                    var result = postTask;
+                    var data = result.Content.ReadAsStringAsync(stoppingToken);
+                    string file = await data/*.Substring(1, data.Result.Length - 2)*/;
+                    if (result.IsSuccessStatusCode)
+                    {
+                        ResultASN = "Success";
+                        EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                        await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, JsonConvert.SerializeObject(_main), file, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+
+                    }
+                    else
+                    {
+                        ResultASN = "Failed";
+                        EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, JsonConvert.SerializeObject(_main), file, "Client status: " + result.StatusCode.ToString(), "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                    }
+                    //}
+                }
+            }
+
+            catch (Exception ex)
+            {
+                ResultASN = "Failed";
+                EndDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                await SchedulerHelpers.LogApiRequest(item.docNo, path, ResultASN, SchedulerHelpers.IP, StartDateTime, EndDateTime, query2.Replace("@DocNo", item.docNo), CleaningData.CutdownException(ex), "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                await CreateLog.UpdateErrLogAsync(ex.ToString() + " DocNo:" + item.docNo);
+
+            }
+
+            return (ResultASN, EndDateTime);
+        }
     }
 }

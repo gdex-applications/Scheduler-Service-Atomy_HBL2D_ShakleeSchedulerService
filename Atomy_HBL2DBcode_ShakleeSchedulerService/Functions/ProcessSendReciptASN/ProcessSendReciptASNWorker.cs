@@ -1,4 +1,6 @@
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptASN
+using ATY_HBL2D_SHKSchedulerService;
+
+namespace ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN
 {
     public class ProcessSendReciptASNWorker : BackgroundService
     {

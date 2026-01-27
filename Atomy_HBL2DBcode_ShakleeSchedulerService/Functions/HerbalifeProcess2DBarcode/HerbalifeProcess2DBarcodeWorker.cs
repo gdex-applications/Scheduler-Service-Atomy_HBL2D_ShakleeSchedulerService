@@ -1,4 +1,6 @@
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DBarcode
+using ATY_HBL2D_SHKSchedulerService;
+
+namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
 {
     public class HerbalifeProcess2DBarcodeWorker : BackgroundService
     {

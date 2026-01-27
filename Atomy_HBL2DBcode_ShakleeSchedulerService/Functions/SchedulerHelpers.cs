@@ -1,10 +1,10 @@
-﻿using Atomy_HBL2DBcode_ShakleeSchedulerService.Models;
+﻿using ATY_HBL2D_SHKSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Configuration;
 using System.Net;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions
+namespace ATY_HBL2D_SHKSchedulerService.Functions
 {
     internal static class SchedulerHelpers
     {

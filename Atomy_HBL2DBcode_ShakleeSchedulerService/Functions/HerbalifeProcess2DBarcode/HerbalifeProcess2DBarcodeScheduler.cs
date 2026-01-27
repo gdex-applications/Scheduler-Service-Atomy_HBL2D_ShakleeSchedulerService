@@ -1,8 +1,10 @@
-﻿using Dapper;
+﻿using ATY_HBL2D_SHKSchedulerService;
+using ATY_HBL2D_SHKSchedulerService.Functions;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using WinSCP;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DBarcode
+namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
 {
     internal class HerbalifeProcess2DBarcodeScheduler
     {

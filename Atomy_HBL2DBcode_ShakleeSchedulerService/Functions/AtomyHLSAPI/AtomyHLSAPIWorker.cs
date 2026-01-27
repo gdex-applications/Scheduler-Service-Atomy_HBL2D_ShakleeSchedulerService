@@ -1,4 +1,4 @@
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI
+namespace ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI
 {
     public class AtomyHLSAPIWorker : BackgroundService
     {

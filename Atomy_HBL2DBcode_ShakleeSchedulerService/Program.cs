@@ -1,8 +1,8 @@
-using Atomy_HBL2DBcode_ShakleeSchedulerService;
-using Atomy_HBL2DBcode_ShakleeSchedulerService.Functions;
-using Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.AtomyHLSAPI;
-using Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.HerbalifeProcess2DBarcode;
-using Atomy_HBL2DBcode_ShakleeSchedulerService.Functions.ProcessSendReciptASN;
+using ATY_HBL2D_SHKSchedulerService;
+using ATY_HBL2D_SHKSchedulerService.Functions;
+using ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI;
+using ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode;
+using ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN;
 using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 

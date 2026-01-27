@@ -1,4 +1,4 @@
-﻿namespace Atomy_HBL2DBcode_ShakleeSchedulerService
+﻿namespace ATY_HBL2D_SHKSchedulerService
 {
     internal class CreateLog
     {

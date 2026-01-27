@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Models
+namespace ATY_HBL2D_SHKSchedulerService.Models
 {
     public class Header
     {

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Atomy_HBL2DBcode_ShakleeSchedulerService.Functions
+namespace ATY_HBL2D_SHKSchedulerService.Functions
 {
     internal class CleaningData
     {
