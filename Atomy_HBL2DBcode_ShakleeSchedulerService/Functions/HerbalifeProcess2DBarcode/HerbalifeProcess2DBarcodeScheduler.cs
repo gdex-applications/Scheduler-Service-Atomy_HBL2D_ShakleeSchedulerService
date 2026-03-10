@@ -75,7 +75,8 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
                             string localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
                             while (File.Exists(localPath))
                             {
-                                localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.AddMinutes(1).ToString("yyyyMMddHHmm") + ".DAT";
+                                saveTime = saveTime.AddMinutes(1);
+                                localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
                             }
 
                             using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
