@@ -69,14 +69,16 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
 
                     if (hBLBarcodesChunk.Any())
                     {
+                        var saveTime = DateTime.Now;
                         foreach (var item in hBLBarcodesChunk)
                         {
-                            var saveTime = DateTime.Now;
                             string localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                            while (File.Exists(localPath))
+                            string localPathBkp = SaveTo_LocalPath_Barcode_Backup + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
+                            while (File.Exists(localPath)  || File.Exists(localPathBkp))
                             {
                                 saveTime = saveTime.AddMinutes(1);
                                 localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
+                                localPathBkp = SaveTo_LocalPath_Barcode_Backup + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
                             }
 
                             using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
