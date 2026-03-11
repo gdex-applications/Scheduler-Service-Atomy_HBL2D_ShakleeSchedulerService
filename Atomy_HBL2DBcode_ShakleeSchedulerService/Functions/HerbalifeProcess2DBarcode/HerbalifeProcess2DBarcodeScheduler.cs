@@ -2,6 +2,7 @@
 using ATY_HBL2D_SHKSchedulerService.Functions;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using System.Text;
 using WinSCP;
 
 namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
@@ -21,7 +22,7 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
 
             SchedulerHelpers.conn = SchedulerHelpers.extConfiguration!.ConnectionStrings.ConnectionStrings["GWAPI"].ConnectionString!;
             SchedulerHelpers.WebhookInstances = int.Parse(SchedulerHelpers.extConfiguration!.AppSettings.Settings["app:webhook_instances"].Value!);
-            SaveTo_LocalPath_Barcode = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HerbalifeProcess_Path_Barcode"].Value!; 
+            SaveTo_LocalPath_Barcode = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HerbalifeProcess_Path_Barcode"].Value!;
             SaveTo_LocalPath_Barcode_Backup = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HerbalifeProcess_Path_Barcode_Backup"].Value!;
             RemotePath_Barcode = SchedulerHelpers.extConfiguration!.AppSettings.Settings["SFTPHL_Barcode"].Value!;
 
@@ -69,31 +70,36 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
 
                     if (hBLBarcodesChunk.Any())
                     {
-                        var saveTime = DateTime.Now;
+                        
                         foreach (var item in hBLBarcodesChunk)
                         {
-                            string localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                            string localPathBkp = SaveTo_LocalPath_Barcode_Backup + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                            while (File.Exists(localPath)  || File.Exists(localPathBkp))
+                            StringBuilder sw = new StringBuilder();
+                            StringBuilder dw = new StringBuilder();
+                            foreach (var barcode in item)
+                            {
+                                EndProcess = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                sw.AppendLine(barcode.Barcode);
+                                dw.AppendLine("Insert into WHMiddleware.dbo.WebApi_Log ([Key], [Path], [Status], [IPAddress], [StartTime], [EndTime], [CreateBy],[CreateDate], [FileName]) "
+                                                    + "Values ('" + barcode.SerialNo + "','HerbalifeProcess_Barcode','Success','" + SchedulerHelpers.IP + "','" + StartProcess + "','" + EndProcess + "'," +
+                                                    "'" + SchedulerHelpers.User + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','{0}');");
+                            }
+                            var saveTime = DateTime.Now;
+                            var filename= "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
+                          
+                            while (Directory.EnumerateFiles(SaveTo_LocalPath_Barcode, filename, SearchOption.AllDirectories).Any())
                             {
                                 saveTime = saveTime.AddMinutes(1);
-                                localPath = SaveTo_LocalPath_Barcode + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                                localPathBkp = SaveTo_LocalPath_Barcode_Backup + "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
+                                filename = "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
                             }
-
+                            string localPath = SaveTo_LocalPath_Barcode + filename;
                             using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
                             {
-                                foreach (var barcode in item)
-                                {
-                                    streamWriterBarcode.WriteLine(barcode.Barcode);
-                                    EndProcess = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                    string insertBarcodeLog = "Insert into WHMiddleware.dbo.WebApi_Log ([Key], [Path], [Status], [IPAddress], [StartTime], [EndTime], [CreateBy],[CreateDate], [FileName]) "
-                                                    + "Values ('" + barcode.SerialNo + "','HerbalifeProcess_Barcode','Success','" + SchedulerHelpers.IP + "','" + StartProcess + "','" + EndProcess + "'," +
-                                                    "'" + SchedulerHelpers.User + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','" + Path.GetFileName(localPath) + "')";
-
-                                    await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
-                                }
+                                streamWriterBarcode.Write(sw.ToString());
                             }
+                            string insertBarcodeLog = string.Format(dw.ToString(), Path.GetFileName(localPath));
+
+                            await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
+
                         }
                     }
 
