@@ -90,15 +90,20 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
                             {
                                 saveTime = saveTime.AddMinutes(1);
                                 filename = "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                            }
-                            string localPath = SaveTo_LocalPath_Barcode + filename;
-                            using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
-                            {
-                                streamWriterBarcode.Write(sw.ToString());
-                            }
-                            string insertBarcodeLog = string.Format(dw.ToString(), Path.GetFileName(localPath));
+                                if (!Directory.EnumerateFiles(SaveTo_LocalPath_Barcode, filename, SearchOption.AllDirectories).Any())
+                                {
+                                    string localPath = SaveTo_LocalPath_Barcode + filename;
+                                    using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
+                                    {
+                                        streamWriterBarcode.Write(sw.ToString());
+                                    }
+                                    string insertBarcodeLog = string.Format(dw.ToString(), Path.GetFileName(localPath));
 
-                            await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
+                                    await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
+                                    break;
+                                }
+                            }
+                            
 
                         }
                     }
