@@ -24,7 +24,7 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
             while (!stoppingToken.IsCancellationRequested)
             {
 
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 try
                 {
 
