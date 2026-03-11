@@ -85,25 +85,27 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
                             }
                             var saveTime = DateTime.Now;
                             var filename= "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
-                          
+                            string localPath = SaveTo_LocalPath_Barcode + filename;
                             while (Directory.EnumerateFiles(SaveTo_LocalPath_Barcode, filename, SearchOption.AllDirectories).Any())
                             {
                                 saveTime = saveTime.AddMinutes(1);
                                 filename = "MYC" + saveTime.ToString("yyyyMMddHHmm") + ".DAT";
                                 if (!Directory.EnumerateFiles(SaveTo_LocalPath_Barcode, filename, SearchOption.AllDirectories).Any())
                                 {
-                                    string localPath = SaveTo_LocalPath_Barcode + filename;
-                                    using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
-                                    {
-                                        streamWriterBarcode.Write(sw.ToString());
-                                    }
-                                    string insertBarcodeLog = string.Format(dw.ToString(), Path.GetFileName(localPath));
-
-                                    await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
+                                    localPath = SaveTo_LocalPath_Barcode + filename;
+                                    File.Create(localPath).Dispose();
                                     break;
                                 }
                             }
                             
+                            using (StreamWriter streamWriterBarcode = new StreamWriter(localPath))
+                            {
+                                streamWriterBarcode.Write(sw.ToString());
+                            }
+                            string insertBarcodeLog = string.Format(dw.ToString(), Path.GetFileName(localPath));
+
+                            await _conn.ExecuteAsync(new CommandDefinition(insertBarcodeLog, cancellationToken: stoppingToken));
+
 
                         }
                     }
