@@ -10,7 +10,7 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
         {
             _logger = logger;
             _configuration = configuration;
-            _ = new HerbalifeProcess2DBarcodeScheduler(_configuration);
+            _ = new BranchCodeTaskScheduler(_configuration);
 
         }
         /// <summary>
