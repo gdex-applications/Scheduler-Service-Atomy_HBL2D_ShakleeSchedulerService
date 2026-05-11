@@ -33,11 +33,11 @@ namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
                 using (SqlConnection _conn = new SqlConnection(SchedulerHelpers.conn))
                 {
                     //Delete previous BranchCode
-                    await _conn.ExecuteAsync("delete [WHMiddleware].[dbo].[WH_BranchCode]");
+                    await _conn.ExecuteAsync(new CommandDefinition("delete [WHMiddleware].[dbo].[WH_BranchCode]", cancellationToken: stoppingToken));
 
 
                     //Get all branch code that need to be Updated
-                    IEnumerable<SARBranchCode> _ttlSarBranchCode = await _conn.QueryAsync<SARBranchCode>(new CommandDefinition(" exec manifestdb.dbo.mms_select @ptype='PQ_SV_POSTCODE_WHS' ", commandType: System.Data.CommandType.StoredProcedure, cancellationToken: stoppingToken));
+                    IEnumerable<SARBranchCode> _ttlSarBranchCode = await _conn.QueryAsync<SARBranchCode>(new CommandDefinition(" exec manifestdb.dbo.mms_select @ptype='PQ_SV_POSTCODE_WHS' ", cancellationToken: stoppingToken));
 
 
                     ////Latest code change to use SP
