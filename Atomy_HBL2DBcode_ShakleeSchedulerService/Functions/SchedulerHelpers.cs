@@ -1,10 +1,10 @@
-﻿using ATY_HBL2D_SHKSchedulerService.Models;
+﻿using AtmyHbl2dShkleBrnCdSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Configuration;
 using System.Net;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions
 {
     internal static class SchedulerHelpers
     {

@@ -1,6 +1,6 @@
-using ATY_HBL2D_SHKSchedulerService;
+using AtmyHbl2dShkleBrnCdSchedulerService;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.HerbalifeProcess2DBarcode
 {
     public class HerbalifeProcess2DBarcodeWorker : BackgroundService
     {

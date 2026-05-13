@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions
 {
     internal class CleaningData
     {

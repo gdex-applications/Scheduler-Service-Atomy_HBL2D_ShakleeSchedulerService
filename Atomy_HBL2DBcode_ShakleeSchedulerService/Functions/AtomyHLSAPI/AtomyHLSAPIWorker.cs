@@ -1,4 +1,6 @@
-namespace ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI
+using AtmyHbl2dShkleBrnCdSchedulerService;
+
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
 {
     public class AtomyHLSAPIWorker : BackgroundService
     {

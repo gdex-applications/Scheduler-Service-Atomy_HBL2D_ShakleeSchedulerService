@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ATY_HBL2D_SHKSchedulerService.Models
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Models
 {
     internal class GenericResponse
     {

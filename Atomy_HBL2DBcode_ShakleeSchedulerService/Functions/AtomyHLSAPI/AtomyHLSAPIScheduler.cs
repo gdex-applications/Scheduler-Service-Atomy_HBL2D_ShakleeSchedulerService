@@ -1,6 +1,6 @@
-﻿using ATY_HBL2D_SHKSchedulerService;
-using ATY_HBL2D_SHKSchedulerService.Functions;
-using ATY_HBL2D_SHKSchedulerService.Models;
+﻿using AtmyHbl2dShkleBrnCdSchedulerService;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions;
+using AtmyHbl2dShkleBrnCdSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
 {
     internal class AtomyHLSAPIScheduler
     {

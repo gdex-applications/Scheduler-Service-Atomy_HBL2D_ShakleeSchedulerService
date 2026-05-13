@@ -1,4 +1,4 @@
-﻿namespace ATY_HBL2D_SHKSchedulerService.Models
+﻿namespace AtmyHbl2dShkleBrnCdSchedulerService.Models
 {
     public class WH_ASN
     {

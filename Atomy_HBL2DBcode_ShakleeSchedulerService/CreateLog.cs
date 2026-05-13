@@ -1,4 +1,4 @@
-﻿namespace ATY_HBL2D_SHKSchedulerService
+﻿namespace AtmyHbl2dShkleBrnCdSchedulerService
 {
     internal class CreateLog
     {

@@ -1,12 +1,12 @@
-﻿using ATY_HBL2D_SHKSchedulerService;
-using ATY_HBL2D_SHKSchedulerService.Functions;
-using ATY_HBL2D_SHKSchedulerService.Models;
+﻿using AtmyHbl2dShkleBrnCdSchedulerService;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions;
+using AtmyHbl2dShkleBrnCdSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.ProcessSendReciptASN
 {
     internal class ProcessSendReciptASNScheduler
     {

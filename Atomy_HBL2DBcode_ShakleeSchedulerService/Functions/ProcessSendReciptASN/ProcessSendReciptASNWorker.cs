@@ -1,6 +1,6 @@
-using ATY_HBL2D_SHKSchedulerService;
+using AtmyHbl2dShkleBrnCdSchedulerService;
 
-namespace ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN
+namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.ProcessSendReciptASN
 {
     public class ProcessSendReciptASNWorker : BackgroundService
     {

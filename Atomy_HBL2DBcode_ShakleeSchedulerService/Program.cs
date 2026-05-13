@@ -1,8 +1,9 @@
-using ATY_HBL2D_SHKSchedulerService;
-using ATY_HBL2D_SHKSchedulerService.Functions;
-using ATY_HBL2D_SHKSchedulerService.Functions.AtomyHLSAPI;
-using ATY_HBL2D_SHKSchedulerService.Functions.HerbalifeProcess2DBarcode;
-using ATY_HBL2D_SHKSchedulerService.Functions.ProcessSendReciptASN;
+using AtmyHbl2dShkleBrnCdSchedulerService;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions.BranchCodeTask;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions.HerbalifeProcess2DBarcode;
+using AtmyHbl2dShkleBrnCdSchedulerService.Functions.ProcessSendReciptASN;
 using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 
