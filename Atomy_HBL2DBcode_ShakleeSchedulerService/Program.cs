@@ -26,6 +26,7 @@ try
             services.AddHostedService<AtomyHLSAPIWorker>();
             services.AddHostedService<HerbalifeProcess2DBarcodeWorker>();
             services.AddHostedService<ProcessSendReciptASNWorker>();
+            services.AddHostedService<BranchCodeTaskWorker>();
         })
         .UseWindowsService()
         .Build();
