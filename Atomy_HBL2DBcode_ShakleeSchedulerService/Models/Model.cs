@@ -172,5 +172,21 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Models
         //public string OrderID { get; set; } = "";
 
     }
+    public class orderIdWithLineSqlModel
+    {
+        public string SaleNum { get; set; } = "";
+        public string Seq { get; set; } = "";
+    }
+
+
+
+    public class AtomyUpdateApiRespondModel
+    {
+        public int Status { get; set; }
+        public string StatusDetailCode { get; set; }
+        public object[] Data { get; set; }
+    }
+
+
 
 }

@@ -4,10 +4,13 @@ using AtmyHbl2dShkleBrnCdSchedulerService.Models;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
+using System.Data;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Web;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
 {
@@ -15,14 +18,18 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
     {
         private readonly IConfiguration _configuration;
         private static string HLSSendOrderURL = "";
-
+        private static string AtomyuserToken = "";
+        private static string AtomyapiToken = "";
+        private static string AtomyupdateURL = "";
         public AtomyHLSAPIScheduler(IConfiguration configuration)
         {
             _configuration = configuration;
             SchedulerHelpers.conn = SchedulerHelpers.extConfiguration!.ConnectionStrings.ConnectionStrings["GWAPI"].ConnectionString!;
             SchedulerHelpers.WebhookInstances = int.Parse(SchedulerHelpers.extConfiguration!.AppSettings.Settings["app:webhook_instances"].Value!);
             SchedulerHelpers.Retries = _configuration.GetValue<int>("Retries")!;
-
+            AtomyuserToken = _configuration.GetValue<string>("Atomy:userToken")!;
+            AtomyapiToken = _configuration.GetValue<string>("Atomy:apiToken")!;
+            AtomyupdateURL = _configuration.GetValue<string>("Atomy:updateURL")!;
 
             HLSSendOrderURL = SchedulerHelpers.extConfiguration!.AppSettings.Settings["HLSURL_SO"].Value!;
         }
@@ -265,6 +272,96 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
             }
 
         }
+
+        internal static async Task PorcessSendInProcessToAtomy(CancellationToken stoppingToken)
+        {
+            try
+            {
+                using SqlConnection con = new SqlConnection(SchedulerHelpers.conn);
+
+                string StartPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string EndPush = string.Empty;
+                EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Start running SendInProcessToAtomy", "Start Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+
+
+                //Get all header data that need to be push to API
+                IEnumerable<orderIdWithLineSqlModel> _ttlHeaderdata = await con.QueryAsync<orderIdWithLineSqlModel>(new CommandDefinition("select a.docno SaleNum,b.[lineno] Seq from whmiddleware..header a with(nolock) left join whmiddleware..Details b  with(nolock) on a.docNo=b.DocNo WHERE a.customerId = 'ATOMY' and a.OrderStatus = 'Success' and a.inProcess='0' ", cancellationToken: stoppingToken));
+                IEnumerable<IGrouping<string, orderIdWithLineSqlModel>> _ttlHeaderGrouped = _ttlHeaderdata.GroupBy(x => x.SaleNum);
+
+                foreach (var item in _ttlHeaderGrouped)
+                {
+                    await SendInProcessToAtomy(item, stoppingToken);
+                }
+
+
+
+                EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Finish running SendInProcessToAtomy", "Success Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        private static async Task SendInProcessToAtomy(IGrouping<string, orderIdWithLineSqlModel> group, CancellationToken stoppingToken)
+        {
+            string key = string.Empty;
+            string FileName = string.Empty;
+            string _responseString = string.Empty;
+            string StartPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string EndFullTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string AtomyPaymentTerms = "NCOD";
+            GenericResponse _result = new GenericResponse();
+            HttpResponseMessage _response = new HttpResponseMessage();
+            string jsonString = string.Empty;
+            using SqlConnection _conn = new SqlConnection(SchedulerHelpers.conn);
+            using HttpClient client = new();
+            client.DefaultRequestHeaders.Add("Atomy-User-Token", AtomyuserToken);
+            client.DefaultRequestHeaders.Add("Atomy-Api-Token", AtomyapiToken);
+            object respondBar = new object();
+            var EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            key = group.Key;
+            var flatItemsInGroup = group
+            .Select(r => new { r.SaleNum, r.Seq })
+            .ToList();
+            string jsonChunk = JsonConvert.SerializeObject(flatItemsInGroup);
+            try
+            {
+               
+                _response = await client.GetAsync(AtomyupdateURL, stoppingToken);
+                var respond = await _response.Content.ReadAsStringAsync(stoppingToken);
+                _response.EnsureSuccessStatusCode();
+
+                respondBar = JsonConvert.DeserializeObject<object>(respond)!;
+                if (respondBar is AtomyUpdateApiRespondModel)
+                {
+                    var dat = (AtomyUpdateApiRespondModel)respondBar;
+                    if (dat.Status==1)
+                    {
+                        string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET inProcess='1' WHERE DocNo = '{key}'";
+                        await _conn.ExecuteAsync(new CommandDefinition(_updateSuccess, cancellationToken: stoppingToken));
+                        EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, jsonChunk, respond, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                        return;
+                    }
+                }
+                 EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Failed", SchedulerHelpers.IP, StartPush, EndPush, jsonChunk, respond, "", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Failed", SchedulerHelpers.IP, StartPush, EndPush, jsonChunk, "", CleaningData.CutdownException(ex), "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                
+            }
+        }
+
+
 
     }
 }

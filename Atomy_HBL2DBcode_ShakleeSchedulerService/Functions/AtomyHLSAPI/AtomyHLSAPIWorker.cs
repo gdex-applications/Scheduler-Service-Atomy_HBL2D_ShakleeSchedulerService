@@ -31,6 +31,7 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
 
                     //contoh run bila2
                     await AtomyHLSAPIScheduler.ProcessQueuedAtomyHLSAPI_Outbound(stoppingToken);
+                    await AtomyHLSAPIScheduler.PorcessSendInProcessToAtomy(stoppingToken);
 
 
 
