@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System.Data;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Web;
@@ -333,7 +334,7 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
             try
             {
                
-                _response = await client.GetAsync(AtomyupdateURL, stoppingToken);
+                _response = await client.PutAsJsonAsync(AtomyupdateURL, jsonChunk, stoppingToken);
                 var respond = await _response.Content.ReadAsStringAsync(stoppingToken);
                 _response.EnsureSuccessStatusCode();
 
