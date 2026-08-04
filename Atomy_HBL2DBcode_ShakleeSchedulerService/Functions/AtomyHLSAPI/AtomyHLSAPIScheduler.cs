@@ -288,7 +288,7 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
 
 
                 //Get all header data that need to be push to API
-                IEnumerable<orderIdWithLineSqlModel> _ttlHeaderdata = await con.QueryAsync<orderIdWithLineSqlModel>(new CommandDefinition("select a.docno SaleNum,b.[lineno] Seq from whmiddleware..header a with(nolock) left join whmiddleware..Details b  with(nolock) on a.docNo=b.DocNo WHERE a.customerId = 'ATOMY' and a.OrderStatus = 'Success' and a.inProcess='0' ", cancellationToken: stoppingToken));
+                IEnumerable<orderIdWithLineSqlModel> _ttlHeaderdata = await con.QueryAsync<orderIdWithLineSqlModel>(new CommandDefinition("select a.docno SaleNum,b.[lineno] Seq from whmiddleware..header a with(nolock) left join whmiddleware..Details b  with(nolock) on a.docNo=b.DocNo and a.OrderID=b.OrderID WHERE a.customerId = 'ATOMY' and a.OrderStatus = 'Success' and a.inProcess='0' ", cancellationToken: stoppingToken));
                 IEnumerable<IGrouping<string, orderIdWithLineSqlModel>> _ttlHeaderGrouped = _ttlHeaderdata.GroupBy(x => x.SaleNum);
 
                 foreach (var item in _ttlHeaderGrouped)
@@ -316,7 +316,6 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
             string _responseString = string.Empty;
             string StartPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string EndFullTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string AtomyPaymentTerms = "NCOD";
             GenericResponse _result = new GenericResponse();
             HttpResponseMessage _response = new HttpResponseMessage();
             string jsonString = string.Empty;
@@ -333,7 +332,6 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
             string jsonChunk = JsonConvert.SerializeObject(flatItemsInGroup);
             try
             {
-               
                 _response = await client.PutAsJsonAsync(AtomyupdateURL, jsonChunk, stoppingToken);
                 var respond = await _response.Content.ReadAsStringAsync(stoppingToken);
                 _response.EnsureSuccessStatusCode();
