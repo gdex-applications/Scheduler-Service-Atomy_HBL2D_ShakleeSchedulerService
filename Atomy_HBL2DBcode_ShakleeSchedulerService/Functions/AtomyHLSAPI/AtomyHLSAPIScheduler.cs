@@ -284,23 +284,24 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
                 string EndPush = string.Empty;
                 EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Start running SendInProcessToAtomy", "Start Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
-
-
                 //Get all header data that need to be push to API
-                IEnumerable<orderIdWithLineSqlModel> _ttlHeaderdata = await con.QueryAsync<orderIdWithLineSqlModel>(new CommandDefinition("select a.docno SaleNum,b.[lineno] Seq from whmiddleware..header a with(nolock) left join whmiddleware..Details b  with(nolock) on a.docNo=b.DocNo and a.OrderID=b.OrderID WHERE a.customerId = 'ATOMY' and a.OrderStatus = 'Success' and a.inProcess='0' ", cancellationToken: stoppingToken));
+                IEnumerable<orderIdWithLineSqlModel> _ttlHeaderdata = await con.QueryAsync<orderIdWithLineSqlModel>(new CommandDefinition("select a.docno SaleNum,b.[lineno] Seq from whmiddleware..header a with(nolock) left join whmiddleware..Details b  with(nolock) on a.docNo=b.DocNo and a.OrderID=b.OrderID WHERE a.customerId = 'ATOMY' and a.OrderStatus = 'Success' and a.inProcess='0' order by b.[lineno]", cancellationToken: stoppingToken));
                 IEnumerable<IGrouping<string, orderIdWithLineSqlModel>> _ttlHeaderGrouped = _ttlHeaderdata.GroupBy(x => x.SaleNum);
 
+                if (_ttlHeaderdata.Any())
+                {
+                    await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Start running SendInProcessToAtomy", "Start Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                }
                 foreach (var item in _ttlHeaderGrouped)
                 {
                     await SendInProcessToAtomy(item, stoppingToken);
                 }
+                if (_ttlHeaderdata.Any())
+                {
+                    EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-
-
-                EndPush = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Finish running SendInProcessToAtomy", "Success Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                    await SchedulerHelpers.LogApiRequest("SendInProcessToAtomy", "CallApi", "Success", SchedulerHelpers.IP, StartPush, EndPush, "", "Finish running SendInProcessToAtomy", "Success Select Queued", "", SchedulerHelpers.User, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), stoppingToken);
+                }
             }
             catch (Exception)
             {
@@ -332,14 +333,13 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.AtomyHLSAPI
             string jsonChunk = JsonConvert.SerializeObject(flatItemsInGroup);
             try
             {
-                _response = await client.PutAsJsonAsync(AtomyupdateURL, jsonChunk, stoppingToken);
+                using var content = new StringContent(jsonChunk, System.Text.Encoding.UTF8, "application/json");
+                _response = await client.PutAsync(AtomyupdateURL, content, stoppingToken);
                 var respond = await _response.Content.ReadAsStringAsync(stoppingToken);
                 _response.EnsureSuccessStatusCode();
 
-                respondBar = JsonConvert.DeserializeObject<object>(respond)!;
-                if (respondBar is AtomyUpdateApiRespondModel)
+                if (CleaningData.TryDeserializeObject(respond, out AtomyUpdateApiRespondModel dat))
                 {
-                    var dat = (AtomyUpdateApiRespondModel)respondBar;
                     if (dat.Status==1)
                     {
                         string _updateSuccess = $"UPDATE [WHMiddleware].[dbo].[Header] SET inProcess='1' WHERE DocNo = '{key}'";

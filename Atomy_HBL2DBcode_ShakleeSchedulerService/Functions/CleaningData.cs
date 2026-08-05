@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions
 {
@@ -27,6 +28,20 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions
             //      Class = frame.GetMethod().DeclaringType,
             //  });
             return $"{ex.Message}{Environment.NewLine}Function: {name}{Environment.NewLine}Line: {line}";
+        }
+
+        public static bool TryDeserializeObject<T>(string json, out T result)
+        {
+            try
+            {
+                result = JsonConvert.DeserializeObject<T>(json);
+                return result != null;
+            }
+            catch (JsonException)
+            {
+                result = default;
+                return false;
+            }
         }
     }
 }
