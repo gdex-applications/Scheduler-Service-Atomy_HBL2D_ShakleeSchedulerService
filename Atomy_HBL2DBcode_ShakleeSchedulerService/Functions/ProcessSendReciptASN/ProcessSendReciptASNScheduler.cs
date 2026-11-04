@@ -45,7 +45,7 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.ProcessSendReciptASN
                     //Get all header data that need to be push to API
                     IEnumerable<WH_ASN.MainASNOut> _mainData = await _conn.QueryAsync<WH_ASN.MainASNOut>(new CommandDefinition(query1, cancellationToken: stoppingToken));
 
-
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     foreach (var item in _mainData)
                     {
 

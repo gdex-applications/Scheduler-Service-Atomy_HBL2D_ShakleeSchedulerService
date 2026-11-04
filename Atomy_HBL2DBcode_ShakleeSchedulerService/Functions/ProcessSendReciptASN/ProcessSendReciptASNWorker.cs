@@ -24,7 +24,7 @@ namespace AtmyHbl2dShkleBrnCdSchedulerService.Functions.ProcessSendReciptASN
             while (!stoppingToken.IsCancellationRequested)
             {
 
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
                 try
                 {
 
